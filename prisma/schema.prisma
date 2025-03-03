@@ -1,20 +1,26 @@
-'use server';
-import { prisma } from "@/db/prisma";
-import { convertToPlainObject } from "../utils";
-import { LATEST_PRODUCTS_LIMIT } from "../constans";
-
-// Get latest products
-export async function getLatestProducts() {
-    const data = await prisma.product.findMany({
-        take: LATEST_PRODUCTS_LIMIT,
-        orderBy: { createdAt: 'desc' },
-    })
-    return convertToPlainObject(data);
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
-// Get single product by its slug
-export async function getProductBySlug(slug: string){
-    return await prisma.product.findFirst({
-        where: {slug: slug},
-    });
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  slug        String  @unique(map: "product_slug_idx")
+  category    String
+  images      String[]
+  brand       String
+  description String
+  stock       Int
+  price       Decimal @default(0) @db.Decimal(12,2)
+  rating      Decimal @default(0) @db.Decimal(3,2)
+  numReviews  Int @default(0)
+  isFeatured  Boolean @default(false)
+  banner      String?
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
 }
